@@ -15,10 +15,11 @@
   <a href="/">Home</a> | 
   <a href="/page1">Page 1</a> |
   <a href="/page2">Page 2</a> |
-  <b>Page 3</b>
+  <b>Page 3</b> |
+  <a href="/page4">Page 4</a>
   <hr>
-  
-  <form action="/setNameDog" method="POST">
+
+  <form action="/setDog" method="POST">
     <label for="firstname">Dog First name:</label>
     <input type="text" name="firstname" value="">
     <label for="lastname">Dog Last Name: </label>
@@ -33,7 +34,7 @@
   <br/>
   <br/>
   
-  <form action="findByNameDog" method="GET">
+  <form action="/findByNameDog" method="GET">
     <label for="name">Dog Name to search for (will also increase the Dog's age):</label>
     <input type="text" name="name" value="">
     <input type="submit" value="Submit">

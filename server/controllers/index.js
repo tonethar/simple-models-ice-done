@@ -82,7 +82,7 @@ const hostPage1 = (req, res) => {
     }
 
     // return success
-    return res.render('page1', { cats: docs });
+    return res.render('page1', { title: 'See all Cats', cats: docs });
   };
 
   readAllCats(req, res, callback);
@@ -98,7 +98,7 @@ const hostPage2 = (req, res) => {
   // the file type in the app.js as jade. Calling res.render('index')
   // actually calls index.jade. A second parameter of JSON can be
   // passed into the jade to be used as variables with #{varName}
-  res.render('page2');
+  res.render('page2', { title: 'Add a Cat' });
 };
 
 // function to handle requests to the page3 page
@@ -111,7 +111,7 @@ const hostPage3 = (req, res) => {
 // in the app.js as jade. Calling res.render('index')
 // actually calls index.jade. A second parameter of JSON can be passed
 // into the jade to be used as variables with #{varName}
-  res.render('page3');
+  res.render('page3', { title: 'Add a Dog' });
 };
 
 // function to handle get request to send the name
@@ -167,7 +167,6 @@ const setName = (req, res) => {
 
   return res;
 };
-
 
 // function to handle requests search for a name and return the object
 // controller functions in Express receive the full HTTP request
@@ -272,37 +271,24 @@ const readDog = (req, res) => {
   Dog.findByName(name1, callback);
 };
 
-const setNameDog = (req, res) => {
-  // check if the required fields exist
-  // normally you would also perform validation
-  // to know if the data they sent you was real
-  if (!req.body.firstname || !req.body.lastname || !req.body.beds) {
-    // if not respond with a 400 error
-    // (either through json or a web page depending on the client dev)
-    return res.status(400).json({ error: 'firstname,lastname and beds are all required' });
+const setDog = (req, res) => {
+  if (!req.body.firstname || !req.body.lastname || !req.body.breed || !req.body.age) {
+    return res.status(400).json({ error: 'firstname, lastname, breed and age are all required' });
   }
 
-  // if required fields are good, then set name
-  const name = `${req.body.firstname} ${req.body.lastname}`;
-
-  // dummy JSON to insert into database
-  const catData = {
-    name,
-    bedsOwned: req.body.beds,
+  const dogData = {
+    name : `${req.body.firstname} ${req.body.lastname}`,
+    breed: req.body.breed,
+    age: req.body.age,
   };
 
-  // create a new object of CatModel with the object to save
-  const newCat = new Cat(catData);
+  const newDog = new Dog(dogData);
 
   // create new save promise for the database
-  const savePromise = newCat.save();
+  const savePromise = newDog.save();
 
   savePromise.then(() => {
-    // set the lastAdded cat to our newest cat object.
-    // This way we can update it dynamically
-    lastAdded = newCat;
-    // return success
-    res.json({ name: lastAdded.name, beds: lastAdded.bedsOwned });
+    res.json({ name: dogData.name, breed: dogData.breed, age: dogData.age});
   });
 
   // if error, return it
@@ -316,7 +302,7 @@ const setNameDog = (req, res) => {
 // and a pre-filled out response object to send
 const searchNameDog = (req, res) => {
   if (!req.query.name) {
-    return res.status(400).json({ error: 'Name is required to perform a search' });
+    return res.status(400).json({ error: 'A Dog Name is required to perform a search' });
   }
 
   return Dog.findByName(req.query.name, (err, doc) => {
@@ -332,9 +318,29 @@ const searchNameDog = (req, res) => {
     }
 
     // if a match, send the match back
-    return res.json({ name: doc.name, breed: doc.breed, age: doc.age });
+    // TODO save and increase the age of the Dog
+    const d = doc;
+    d.age += 1;
+    const savePromise = doc.save();
+    savePromise.then(() => res.json({ name: doc.name, breed: doc.breed, age: doc.age }));
   });
 };
+
+const hostPage4 = (req, res) => {
+  // function to call when we get objects back from the database.
+  // With Mongoose's find functions, you will get an err and doc(s) back
+  const callback = (err, docs) => {
+    if (err) {
+      return res.status(500).json({ err }); // if error, return it
+    }
+
+    // return success
+    return res.render('page4', { title: 'Show all Dogs', dogs: docs });
+  };
+
+  readAllDogs(req, res, callback);
+};
+
 
 // export the relevant public controller functions
 module.exports = {
@@ -342,10 +348,14 @@ module.exports = {
   page1: hostPage1,
   page2: hostPage2,
   page3: hostPage3,
+  page4: hostPage4,
   readCat,
   getName,
   setName,
   updateLast,
   searchName,
   notFound,
+  readDog,
+  setDog,
+  searchNameDog,
 };
