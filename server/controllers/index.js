@@ -3,6 +3,7 @@ const models = require('../models');
 
 // get the Cat model
 const Cat = models.Cat.CatModel;
+const Dog = models.Dog.DogModel;
 
 // default fake data so that we have something to work with until we make a real Cat
 const defaultData = {
@@ -44,7 +45,6 @@ const readAllCats = (req, res, callback) => {
   // object format, rather than the Mongo document format.
   Cat.find(callback).lean();
 };
-
 
 // function to find a specific cat on request.
 // Express functions always receive the request and the response.
@@ -105,12 +105,12 @@ const hostPage2 = (req, res) => {
 // controller functions in Express receive the full HTTP request
 // and a pre-filled out response object to send
 const hostPage3 = (req, res) => {
-    // res.render takes a name of a page to render.
-    // These must be in the folder you specified as views in your main app.js file
-    // Additionally, you don't need .jade because you registered the file type
-    // in the app.js as jade. Calling res.render('index')
-    // actually calls index.jade. A second parameter of JSON can be passed
-    // into the jade to be used as variables with #{varName}
+// res.render takes a name of a page to render.
+// These must be in the folder you specified as views in your main app.js file
+// Additionally, you don't need .jade because you registered the file type
+// in the app.js as jade. Calling res.render('index')
+// actually calls index.jade. A second parameter of JSON can be passed
+// into the jade to be used as variables with #{varName}
   res.render('page3');
 };
 
@@ -246,6 +246,93 @@ const notFound = (req, res) => {
   // the jade to be used as variables with #{varName}
   res.status(404).render('notFound', {
     page: req.url,
+  });
+};
+
+// Dog Stuff
+
+const readAllDogs = (req, res, callback) => {
+  Dog.find(callback).lean();
+};
+
+// function to find a specific cat on request.
+// Express functions always receive the request and the response.
+const readDog = (req, res) => {
+  const name1 = req.query.name;
+
+  const callback = (err, doc) => {
+    if (err) {
+      return res.status(500).json({ err }); // if error, return it
+    }
+
+    // return success
+    return res.json(doc);
+  };
+
+  Dog.findByName(name1, callback);
+};
+
+const setNameDog = (req, res) => {
+  // check if the required fields exist
+  // normally you would also perform validation
+  // to know if the data they sent you was real
+  if (!req.body.firstname || !req.body.lastname || !req.body.beds) {
+    // if not respond with a 400 error
+    // (either through json or a web page depending on the client dev)
+    return res.status(400).json({ error: 'firstname,lastname and beds are all required' });
+  }
+
+  // if required fields are good, then set name
+  const name = `${req.body.firstname} ${req.body.lastname}`;
+
+  // dummy JSON to insert into database
+  const catData = {
+    name,
+    bedsOwned: req.body.beds,
+  };
+
+  // create a new object of CatModel with the object to save
+  const newCat = new Cat(catData);
+
+  // create new save promise for the database
+  const savePromise = newCat.save();
+
+  savePromise.then(() => {
+    // set the lastAdded cat to our newest cat object.
+    // This way we can update it dynamically
+    lastAdded = newCat;
+    // return success
+    res.json({ name: lastAdded.name, beds: lastAdded.bedsOwned });
+  });
+
+  // if error, return it
+  savePromise.catch((err) => res.status(500).json({ err }));
+
+  return res;
+};
+
+// function to handle requests search for a name and return the object
+// controller functions in Express receive the full HTTP request
+// and a pre-filled out response object to send
+const searchNameDog = (req, res) => {
+  if (!req.query.name) {
+    return res.status(400).json({ error: 'Name is required to perform a search' });
+  }
+
+  return Dog.findByName(req.query.name, (err, doc) => {
+    // errs, handle them
+    if (err) {
+      return res.status(500).json({ err }); // if error, return it
+    }
+
+    // if no matches, let them know
+    // (does not necessarily have to be an error since technically it worked correctly)
+    if (!doc) {
+      return res.json({ error: 'No dogs found' });
+    }
+
+    // if a match, send the match back
+    return res.json({ name: doc.name, breed: doc.breed, age: doc.age });
   });
 };
 
