@@ -48,7 +48,7 @@ const CatSchema = new mongoose.Schema({
     required: true,
   },
 
-  createdData: {
+  createdDate: {
     type: Date,
     default: Date.now,
   },
@@ -79,7 +79,6 @@ CatSchema.statics.findByName = (name, callback) => {
 // and the schema to make a model from.
 // Look at the model variable definition above for more details.
 CatModel = mongoose.model('Cat', CatSchema);
-
 
 // export our public properties
 module.exports.CatModel = CatModel;
